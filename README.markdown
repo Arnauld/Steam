@@ -32,18 +32,18 @@ The language diary
 
 * Add qualified identifier
 
-    qualifiedIdentifier returns [QualifiedIdentifier result]
-    @init { List<String> path = new ArrayList<String> (); } :
-      id=Identifier { path.add(id.getText()); } (':' id=Identifier { path.add(id.getText()); })*
-    {
-      log.debug("qualifiedIdentifier from "+path);
-      result = new QualifiedIdentifier(path.toArray(new String[path.size()]));
-    };
+        qualifiedIdentifier returns [QualifiedIdentifier result]
+        @init { List<String> path = new ArrayList<String> (); } :
+          id=Identifier { path.add(id.getText()); } (':' id=Identifier { path.add(id.getText()); })*
+        {
+          log.debug("qualifiedIdentifier from "+path);
+          result = new QualifiedIdentifier(path.toArray(new String[path.size()]));
+        };
 
 * Modify grammar, 'require' now takes a qualified identifier
 * Fix tests according to this new behavior
 * Add logger to the parser:
 
-    @parser::members {
-        org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
-    }
+        @parser::members {
+            org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
+        }
