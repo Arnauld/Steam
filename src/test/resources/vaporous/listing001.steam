@@ -1,0 +1,28 @@
+// module definition
+echo_module = module echo {
+    public WHO = "Fileas"
+
+    sayHello = () -> sayHello(WHO),
+               (who:String) -> println("Hello $who");
+
+}
+
+// dynamic version of 'require echo' ?
+load(echo_module)
+
+// print 'Hello Fileas'
+echo:sayHello()
+
+// new module definition
+echo_module2 = module echo {
+    public WHO = "Fogg"
+
+    sayHello = () -> sayHello(WHO),
+               (who:String) -> println("***Hello $who");
+}
+
+// reload the module, it will replaces the old one since it has the same name
+load(echo_module2)
+
+// print '***Hello Fogg'
+echo:sayHello()

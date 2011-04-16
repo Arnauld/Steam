@@ -18,15 +18,40 @@ options {
   package steam.parser;
   import steam.lang.*;
 }
+@parser::members {
+  org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
+}
 
 // ---------------- Parser Rules ---------------- //
 
-require returns [Require result] : 'require' NCName ';' {
-	System.out.println("invoke "+$NCName.text);
-	result = new Require($NCName.text);
-} ;
+qualifiedIdentifier returns [QualifiedIdentifier result]
+@init {	List<String> path = new ArrayList<String> (); } : 
+    id=Identifier { path.add(id.getText()); } (':' id=Identifier { path.add(id.getText()); })* 
+{
+    log.debug("qualifiedIdentifier from "+path);
+    result = new QualifiedIdentifier(path.toArray(new String[path.size()]));
+};
+
+require returns [Require result] : 'require' id=qualifiedIdentifier ';' {
+    log.debug("require "+id);
+    result = new Require(id);
+};
+
+
+moduleDecl returns [Module result] : 'module' moduleId=qualifiedIdentifier '{'  '}' {
+    result = new Module(moduleId);
+};
+
+/*
+constantDecl : ('public'|'private'('[' Identifier (',' Identifier)+ ']'))? NCName '=' literal ;
+
+functionDecl : 'func';
+
+literal : StringLiteral | IntegerLiteral | DoubleLiteral;
+*/
 
 // ---------------- Lexer Rules ---------------- //
+/*
 Letter
     :  '\u0024' | '\u005f'|
        '\u0041'..'\u005a' | '\u0061'..'\u007a' |
@@ -36,7 +61,7 @@ Letter
        '\u3400'..'\u3d2d' | '\u4e00'..'\u9fff' |
        '\uf900'..'\ufaff'
     ;
-
+*/
 fragment Digit
 	:	'0'..'9';
 	
@@ -48,6 +73,10 @@ StringLiteral : '"' ~('"')* '"' | '\'' ~('\'')* '\'';
 
 ComparisonOp : '==' | '<' | '>' | '!=' | '<=' | '>=';
 
-NCName : (Letter) (Letter | ('0'..'9') | '.' | '-')*;
+IdentifierFirstChar
+	:	 'a'..'z' | 'A' .. 'Z' | '_';
+
+Identifier
+	: IdentifierFirstChar (IdentifierFirstChar | '0'..'9' )*;
 
 WS: (' '|'\t'|'\u000C') {skip();};

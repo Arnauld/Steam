@@ -1,3 +1,3 @@
 package steam.lang
 
-case class Require(module:String)
+case class Require(qid:QualifiedIdentifier)

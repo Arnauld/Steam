@@ -1,0 +1,49 @@
+// module definition
+module math {
+    public PI = 3.14159265358979323846
+    public TWO_PI = 2*PI
+    public HALF_PI = PI/2
+    public QUARTER_PI = PI/4
+    public THREE_HALVES_PI = TWO_PI - HALF_PI
+
+    SIN_A = -4d / (PI * PI)
+    SIN_B = 4d / PI;
+    SIN_P = 9d / 40;
+
+    // 'public' the function is exported, and visible outside the module
+    public sin(theta:Number) = reduceAngle(theta) match {
+        case x if(abs(x) <= QUARTER_PI) ->
+            sin0(theta)
+        case x ->
+            cos0(HALF_PI - theta)
+    }
+
+    // no qualifier means private, and thus not visible outside the module
+    cos0(x:Number) if x in [-PI/2,PI/2] =
+        sin0(x + ((x > HALF_PI) ? -THREE_HALVES_PI : HALF_PI))
+
+
+    sin0(x:Number) if x in [-PI/2,PI/2] = {
+        tmp = SIN_A * x * abs(x) + SIN_B * x;
+        SIN_P * (tmp * abs(tmp) - tmp) + tmp;
+    }
+
+    /**
+     * Reduces the given angle into the -PI/4 ... PI/4 interval. This method is
+     * use by {@link #sin(Number)} & {@link #cos(Number)}.
+     *
+     * @param theta
+     *            angle in radians
+     * @return reduced angle
+     */
+    reduceAngle(theta:Number) = {
+        theta0 = theta % TWO_PI
+        theta1 = if(abs(theta0) > PI) (theta0 - TWO_PI)  else theta0
+        theta2 = if(abs(theta1) > HALF_PI) (PI - theta1) else theta1
+        theta2
+    }
+
+    public abs(x:Number) = if(x>0) x else x.negate
+
+}
+

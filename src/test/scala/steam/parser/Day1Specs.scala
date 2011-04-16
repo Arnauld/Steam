@@ -7,10 +7,12 @@ import steam.lang.Require
 class Day1Specs  extends Specification {
 
   "Parser" should {
-    "be able to parse simple expression" in {
+    "be able to parse 'require' expression with qualified identifier" in {
       val parser = createParser("require time;")
       val require = parser.require
-      require mustEqual Require("time")
+      require mustVerify(_.isInstanceOf[Require])
+      val qid = require.qid
+      qid.toString mustEqual "time"
     }
   }
 
