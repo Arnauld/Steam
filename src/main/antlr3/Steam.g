@@ -4,61 +4,27 @@ grammar Steam;
   
  */
 
+/*
 options { 
   output = AST;
   ASTLabelType=CommonTree; // type of $stat.tree ref etc... 
 }
+*/
 
 @lexer::header {
-  package org.technbolts.steam.parser;
+  package steam.parser;
 }
 @parser::header {
-  package org.technbolts.steam.parser;
+  package steam.parser;
+  import steam.lang.*;
 }
 
 // ---------------- Parser Rules ---------------- //
-xPath
-    :    pathExpr
-    ;
 
-pathExpr
-    :    ('/' relativePathExpr?)
-    |    ('//' relativePathExpr)
-    |    relativePathExpr
-    ;
-
-relativePathExpr
-    :    primaryStep = stepExpr
-         (( '/' | '//' ) trailingStep = stepExpr )*
-    ;
-
-stepExpr
-    :    ( '.'
-         | abbrevForwardStep
-         ) (predicate)?
-    ;
-
-abbrevForwardStep
-    :    attributeFlag = '@'? (stQName = qName | stNodeExpansion =  '*')
-    ;
-
-predicate
-    :    '[' predicateExpr ']'
-    ;
-
-predicateExpr
-    :    expr (('and'|'or') expr)* |  '(' expr ')'
-    ;
-
-expr
-    :    pathExpr (comparisonExpr | containmentExpr);
-
-comparisonExpr  : (ComparisonOp ) literal;
-containmentExpr : ('contains' | 'excludes') '(' StringLiteral ')';
-
-literal : StringLiteral | numericLiteral | VarRef;
-numericLiteral: IntegerLiteral | DecimalLiteral | DoubleLiteral;
-qName: (NCName ':' NCName) | NCName;
+require returns [Require result] : 'require' NCName ';' {
+	System.out.println("invoke "+$NCName.text);
+	result = new Require($NCName.text);
+} ;
 
 // ---------------- Lexer Rules ---------------- //
 Letter
@@ -80,9 +46,7 @@ DoubleLiteral  : (('.' Digit+) | (Digit+ ('.' Digit*)?)) ('e' | 'E') ('+' | '-')
 
 StringLiteral : '"' ~('"')* '"' | '\'' ~('\'')* '\'';
 
-ComparisonOp : '=' | '<' | '>' | '!=' | '<=' | '>=';
-
-VarRef: '$' NCName;
+ComparisonOp : '==' | '<' | '>' | '!=' | '<=' | '>=';
 
 NCName : (Letter) (Letter | ('0'..'9') | '.' | '-')*;
 
