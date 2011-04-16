@@ -26,4 +26,4 @@ The language diary
 * Add simple specs test
 * tag the day one code
 
-     git tag -a day-one
+     git tag -a day-one -m "End of Day One"
