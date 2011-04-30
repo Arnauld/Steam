@@ -19,7 +19,7 @@ History
 
 The language diary
 
-## Day one (tag 'day-1')
+## Day one (tag 'day-one')
 
 * Project setup
 * Simplify starting grammar
@@ -28,7 +28,7 @@ The language diary
 
      git tag -a day-one -m "End of Day One"
 
-## Day two (tag 'day-2')
+## Day two (tag 'day-two')
 
 * Add qualified identifier
 
@@ -47,3 +47,9 @@ The language diary
         @parser::members {
             org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
         }
+
+* Push created tags in the remote repository (github)
+
+        git push --tags
+
+

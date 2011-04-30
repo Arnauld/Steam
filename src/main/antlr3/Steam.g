@@ -4,12 +4,13 @@ grammar Steam;
   
  */
 
-/*
 options { 
   output = AST;
   ASTLabelType=CommonTree; // type of $stat.tree ref etc... 
 }
-*/
+tokens { 
+	VARIABLE; 
+} // imaginary token
 
 @lexer::header {
   package steam.parser;
@@ -20,34 +21,106 @@ options {
 }
 @parser::members {
   org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
+  
+  protected String unquote(String value) {
+    return value.substring(1, value.length()-1);
+  }
 }
 
 // ---------------- Parser Rules ---------------- //
 
-qualifiedIdentifier returns [QualifiedIdentifier result]
-@init {	List<String> path = new ArrayList<String> (); } : 
-    id=Identifier { path.add(id.getText()); } (':' id=Identifier { path.add(id.getText()); })* 
-{
-    log.debug("qualifiedIdentifier from "+path);
-    result = new QualifiedIdentifier(path.toArray(new String[path.size()]));
-};
+qualifiedIdentifier 
+	:    Identifier ('.' Identifier)* 
+	;
 
-require returns [Require result] : 'require' id=qualifiedIdentifier ';' {
-    log.debug("require "+id);
-    result = new Require(id);
-};
+requireDecl 
+	: 'require' id=qualifiedIdentifier ';'? -> ^('require' $id)
+	;
 
+compilationUnit 
+	: moduleDecl (requireDecl | variableDecl | defDecl)*
+	;
 
-moduleDecl returns [Module result] : 'module' moduleId=qualifiedIdentifier '{'  '}' {
-    result = new Module(moduleId);
-};
+moduleDecl 
+	: 'module' moduleId=qualifiedIdentifier ';'? -> ^('module' $moduleId)
+	;
+
+variableDecl 
+	: ('public')? (mod='var'|mod='val') id=Identifier '=' lit=literal -> ^(VARIABLE $mod $id $lit)
+	;
 
 /*
-constantDecl : ('public'|'private'('[' Identifier (',' Identifier)+ ']'))? NCName '=' literal ;
+ *  def
+ */
+defIdentifier
+	: DefIdentifier
+	| Identifier
+	;
 
+defDecl
+	: 'def' defIdentifier defArguments? defReturn? '=' stmtBlock
+	;
+
+defArgument
+	: Identifier ':' qualifiedIdentifier
+	;
+
+defArguments
+	: '(' ')' | '(' defArgument (',' defArgument)* ')' -> defArgument+
+	;
+	
+defReturn
+	: ':' qualifiedIdentifier
+	;
+	
+defInvocation
+	: (qualifiedIdentifier '.')? defIdentifier '(' defInvocationParameters? ')'
+	;
+
+defInvocationParameters
+	: (Identifier '=')? expr (',' (Identifier '=')? expr)*
+	;
+
+/*
+ *  Expression
+ */
+expr
+	: literal
+	| defInvocation
+	| matchExpr
+	;
+
+matchExpr
+	: 'match' expr '{' matchCaseExpr* '}'
+	;
+	    
+matchCaseExpr
+	: 'case' expr '=>' stmtBlock
+	;
+
+
+/*
+ *  Statement
+ */	
+stmt
+	: (expr ';'? | variableDecl ';'? | stmtBlock)
+	;
+
+stmtBlock
+	: '{' stmt* '}'
+	;
+
+literal 
+	: StringLiteral
+	| IntegerLiteral
+	| HexLiteral
+	| DecimalLiteral
+	| DecimalExpLiteral
+	;
+
+/*
 functionDecl : 'func';
 
-literal : StringLiteral | IntegerLiteral | DoubleLiteral;
 */
 
 // ---------------- Lexer Rules ---------------- //
@@ -66,17 +139,24 @@ fragment Digit
 	:	'0'..'9';
 	
 IntegerLiteral :  Digit+;
-DecimalLiteral :  ('.' Digit+) | (Digit+  '.' Digit*);
-DoubleLiteral  : (('.' Digit+) | (Digit+ ('.' Digit*)?)) ('e' | 'E') ('+' | '-')? Digit+;
+HexLiteral : '0x' (Digit | 'A'..'F' | 'a'..'f')+;	 
+DecimalLiteral :  IntegerLiteral '.' IntegerLiteral;
+DecimalExpLiteral  : (IntegerLiteral | DecimalLiteral) ('e' | 'E') ('+' | '-')? IntegerLiteral;
 
-StringLiteral : '"' ~('"')* '"' | '\'' ~('\'')* '\'';
+StringLiteral : '"""' ~('"""')* '"""' | '"' ~('"')* '"' | '\'' ~('\'')* '\'';
 
-ComparisonOp : '==' | '<' | '>' | '!=' | '<=' | '>=';
-
-IdentifierFirstChar
-	:	 'a'..'z' | 'A' .. 'Z' | '_';
 
 Identifier
-	: IdentifierFirstChar (IdentifierFirstChar | '0'..'9' )*;
+	: ('a'..'z' | 'A' .. 'Z' | '_') ( 'a'..'z' | 'A' .. 'Z' | '_' | '0'..'9' )*;
+
+
+DefIdentifier
+	: ( '<' | '>' | '=' | '~' | '+' | '-' | '*' | '/' | 'a' .. 'z' | 'A' .. 'Z' | '_' )
+	  ( '<' | '>' | '=' | '~' | '+' | '-' | '*' | '/' | 'a' .. 'z' | 'A' .. 'Z' | '_' | '0'..'9' )*
+	;
 
 WS: (' '|'\t'|'\u000C') {skip();};
+
+
+NEWLINE	: ('\r')? '\n' {skip();}
+	;

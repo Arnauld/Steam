@@ -1,3 +1,3 @@
 package steam.lang
 
-case class Module(qid:QualifiedIdentifier)
+case class Module(qid:QualifiedIdentifier, variables:Array[Var[_]])

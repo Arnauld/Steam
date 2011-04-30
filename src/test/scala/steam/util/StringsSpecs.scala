@@ -10,7 +10,7 @@ class StringsSpecs extends Specification {
       result mustEqual "steam"
     }
 
-    "work two elements" in {
+    "work with two elements" in {
       val result = Strings.join(Array("steam","punk"), ":")
       result mustEqual "steam:punk"
     }

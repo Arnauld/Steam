@@ -1,0 +1,38 @@
+// pipeline-oriented programming
+
+/*
+ *
+ * before
+ *
+ */
+reduceAngle(theta:Number) = {
+    theta0 = theta % TWO_PI
+    theta1 = if(abs(theta0) > PI) (theta0 - TWO_PI)  else theta0
+    theta2 = if(abs(theta1) > HALF_PI) (PI - theta1) else theta1
+    theta2
+}
+
+public abs(x:Number) = if(x>0) x else x.negate
+
+/*
+ *
+ * after
+ *
+ */
+
+// CASE1: closure with variable 'x'
+reduceAngle(theta:Number) =
+    (theta % TWO_PI)
+    | {x => abs(x) > PI ? x - TWO_PI  : x}
+    | {x => abs(x) > HALF_PI ? PI - x : x}
+    ;
+
+// CASE2: placeholder '_'
+reduceAngle(theta:Number) =
+    (theta % TWO_PI)
+    | {abs(_) > PI ? _ - TWO_PI  : _}
+    | {abs(_) > HALF_PI ? PI - _ : _}
+    ;
+
+
+

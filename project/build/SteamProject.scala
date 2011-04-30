@@ -10,7 +10,11 @@ class SteamProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val antlrGen = task {
       // Use -fo option to force output to go explicitly into a directory,
       // ignoring any path on the input grammar name.
-      val antlr = new AntlrTool(Array("-fo", "src/main/generated-java/steam/parser/", "src/main/antlr3/Steam.g"))
+      val opts = Array("-fo", "src/main/generated-java/steam/parser/", //
+                        //"-Xgrtree", // print grammar
+                        "-debug", "-trace", // 
+                        "src/main/antlr3/Steam.g")
+      val antlr = new AntlrTool(opts)
       antlr.process
       None
     } describedAs "Generate Antlr files."
