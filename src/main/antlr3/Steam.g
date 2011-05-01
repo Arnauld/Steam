@@ -9,7 +9,11 @@ options {
   ASTLabelType=CommonTree; // type of $stat.tree ref etc... 
 }
 tokens { 
-	VARIABLE; 
+	VARIABLE;
+	VISIBILITY;
+	ARGUMENT;
+	RETURN;
+	BODY;
 } // imaginary token
 
 @lexer::header {
@@ -46,9 +50,13 @@ moduleDecl
 	;
 
 variableDecl 
-	: ('public')? (mod='var'|mod='val') id=Identifier '=' lit=literal -> ^(VARIABLE $mod $id $lit)
+	: visibility=visibilityModifier? (mod='var'|mod='val') id=Identifier '=' value=expr -> ^(VARIABLE $id $value $visibility? $mod )
 	;
 
+visibilityModifier
+	: modifier='public' | (modifier='protected' ('[' qualifiedIdentifier (',' qualifiedIdentifier)* ']')? )
+	-> ^(VISIBILITY $modifier qualifiedIdentifier+)
+	;
 /*
  *  def
  */
@@ -58,7 +66,8 @@ defIdentifier
 	;
 
 defDecl
-	: 'def' defIdentifier defArguments? defReturn? '=' stmtBlock
+	: visibilityModifier? 'def' defIdentifier defArguments? defReturn? '=' defBody 
+	-> ^('def' defIdentifier defArguments? defReturn? visibilityModifier? ^(BODY defBody))
 	;
 
 defArgument
@@ -66,19 +75,23 @@ defArgument
 	;
 
 defArguments
-	: '(' ')' | '(' defArgument (',' defArgument)* ')' -> defArgument+
+	: '(' ')' | '(' defArgument (',' defArgument)* ')' -> ^(ARGUMENT defArgument+)
 	;
 	
 defReturn
-	: ':' qualifiedIdentifier
+	: ':' qualifiedIdentifier -> ^(RETURN qualifiedIdentifier)
+	;
+	
+defBody
+	: expr | stmtBlock
 	;
 	
 defInvocation
-	: (qualifiedIdentifier '.')? defIdentifier '(' defInvocationParameters? ')'
+	: (qualifiedIdentifier ('.' DefIdentifier)?| DefIdentifier) defInvocationParameters?
 	;
 
 defInvocationParameters
-	: (Identifier '=')? expr (',' (Identifier '=')? expr)*
+	: '(' ')' | '(' (Identifier '=')? expr (',' (Identifier '=')? expr)* ')'
 	;
 
 /*
